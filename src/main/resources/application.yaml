@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: GoogleDriveApiService
+  r2dbc:
+    url: r2dbc:pool:postgresql://postgres:postgres@localhost:5432/google_drive_api
+    password: postgres
+    username: postgres
