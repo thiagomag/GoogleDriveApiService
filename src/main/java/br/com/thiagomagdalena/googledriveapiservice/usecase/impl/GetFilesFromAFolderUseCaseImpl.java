@@ -21,7 +21,12 @@ public class GetFilesFromAFolderUseCaseImpl implements GetFilesFromAFolderUseCas
         final var projectId = getFilesFromAFolderRequestParams.getProjectId();
         return googleDriveService.getDriveService(projectId)
                 .flatMap(driveService -> {
-                    final var query = "'" + folderId + "' in parents and trashed = false";
+                    String query;
+                    if (folderId == null) {
+                        query = "trashed = false";
+                    } else {
+                        query = "'" + folderId + "' in parents and trashed = false";
+                    }
 
                     return Mono.fromCallable(() -> driveService.files().list()
                             .setQ(query)
