@@ -21,6 +21,7 @@ import br.com.thiagomagdalena.googledriveapiservice.usecase.UploadFileUseCase;
 import com.google.common.net.HttpHeaders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
@@ -54,19 +55,33 @@ public class GoogleDriveController {
     private final GetGoogleDriveDetailsUseCase getGoogleDriveDetailsUseCase;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Mono<ResponseEntity<GoogleDriveApiResponse>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono,
-                                                                   @RequestPart("uploadFileRequest") UploadFileRequest uploadFileRequest) {
+    public Mono<ResponseEntity<GoogleDriveApiResponse>> uploadFile(
+            @RequestPart("file") Mono<FilePart> filePartMono,
+            @RequestPart("uploadFileRequest") UploadFileRequest uploadFileRequest) {
+
         return filePartMono.flatMap(filePart -> {
-            final var convFile = new File(filePart.filename());
-            uploadFileRequest.setFile(convFile);
+            final var tempFile = new File(filePart.filename());
+            uploadFileRequest.setFile(tempFile);
             uploadFileRequest.setMimeType(Objects.requireNonNull(filePart.headers().getContentType()).toString());
-            return filePart.transferTo(convFile)
+
+            return filePart.transferTo(tempFile)
                     .then(uploadFileUseCase.execute(uploadFileRequest)
                             .map(ResponseEntity::ok)
-                            .onErrorResume(e -> Mono.just(ResponseEntity.status(500).body(GoogleDriveApiResponse.builder()
-                                    .statusCode(500)
-                                    .message("Erro ao fazer upload do arquivo")
-                                    .build()))));
+                            .onErrorResume(e -> {
+                                System.err.println("Erro ao processar o arquivo: " + e.getMessage());
+                                e.printStackTrace();
+                                return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(GoogleDriveApiResponse.builder()
+                                                .statusCode(500)
+                                                .message("Erro ao fazer upload do arquivo: " + e.getMessage())
+                                                .build()));
+                            })
+                    )
+                    .doFinally(signalType -> {
+                        if (tempFile.exists()) {
+                            tempFile.delete();
+                        }
+                    });
         });
     }
 
@@ -89,7 +104,7 @@ public class GoogleDriveController {
                 });
     }
 
-    @GetMapping(value = "files/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/files/list", produces = MediaType.APPLICATION_JSON_VALUE)
     public Flux<FileResponse> listFilesInFolder(@RequestParam(required = false) String folderId,
                                                 @RequestParam String projectId) {
         final var getFilesFromAFolderRequestParams = GetFilesFromAFolderRequestParams.builder()
@@ -99,22 +114,22 @@ public class GoogleDriveController {
         return getFilesFromAFolderUseCase.execute(getFilesFromAFolderRequestParams);
     }
 
-    @GetMapping(value = "folders/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/folders/list", produces = MediaType.APPLICATION_JSON_VALUE)
     public Flux<FolderResponse> listFoldersInFolder(@RequestParam String projectId) {
         return getAllFoldersUseCase.execute(projectId);
     }
 
-    @PostMapping(value = "folders/create", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/folders/create", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<FolderResponse> createFolder(@RequestBody CreateFolderRequest createFolderRequest) {
         return createFolderUseCase.execute(createFolderRequest);
     }
 
-    @PostMapping(value = "resources/share", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/resources/share", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<String> shareResources(@RequestBody ShareResourceRequest shareResourceRequest) {
         return shareResourceUseCase.execute(shareResourceRequest);
     }
 
-    @DeleteMapping(value = "resources/{projectId}/delete/{resourceId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/resources/{projectId}/delete/{resourceId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<Void> deleteResource(@PathVariable String resourceId,
                                      @PathVariable String projectId) {
         final var deleteResourceRequest = DeleteResourceRequest.builder()
@@ -124,7 +139,7 @@ public class GoogleDriveController {
         return deleteResourceUseCase.execute(deleteResourceRequest);
     }
 
-    @GetMapping(value = "drive-details/{projectId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/drive-details/{projectId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<GoogleDriveDetailsResponse> getDriveDetails(@PathVariable String projectId) {
         return getGoogleDriveDetailsUseCase.execute(projectId);
     }
