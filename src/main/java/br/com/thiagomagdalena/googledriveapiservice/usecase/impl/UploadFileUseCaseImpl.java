@@ -54,6 +54,7 @@ public class UploadFileUseCaseImpl implements UploadFileUseCase {
                 .url(GoogleDriveService.GOOGLE_DRIVE_URL + file.getId())
                 .statusCode(201)
                 .message("Arquivo enviado com sucesso")
+                .fileId(file.getId())
                 .build();
     }
 }
