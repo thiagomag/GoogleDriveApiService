@@ -1,5 +1,5 @@
 services:
-  nasa-api-backend:
+  google-drive-api-service:
     image: thiagomag/google-drive-api-service:rpi
     build:
       context: .
