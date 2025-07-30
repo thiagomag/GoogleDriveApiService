@@ -11,7 +11,8 @@ public class PrivateKeyUtil {
         // Remove as marcações "BEGIN" e "END" da chave
         String privateKeyContent = privateKeyPem
                 .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "");
+                .replace("-----END PRIVATE KEY-----", "")
+                .replace("\\n", "");
 
         // Decodifica a chave Base64
         byte[] keyBytes = Base64.getDecoder().decode(privateKeyContent);
