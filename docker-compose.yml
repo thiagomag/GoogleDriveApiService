@@ -7,8 +7,8 @@ services:
       DB_PORT: 5432
       DB_NAME: google_drive_api
       DB_URL_PARAM: ?ssl=false
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
 
 volumes:
   postgres_data:
