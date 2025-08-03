@@ -5,6 +5,8 @@ spring:
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:google_drive_api}${DB_URL_PARAM:?ssl=false}
     password: ${DB_PASSWORD:postgres}
     username: ${DB_USER:postgres}
+    pool:
+      max-size: 10
   servlet:
     multipart:
       enabled: true
