@@ -1,0 +1,14 @@
+services:
+  google-drive-api-service:
+    container_name: google-drive-api-service
+    restart: unless-stopped
+    environment:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: google_drive_api
+      DB_URL_PARAM: ?ssl=false
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+
+volumes:
+  postgres_data:

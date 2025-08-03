@@ -1,0 +1,12 @@
+services:
+  google-drive-api-service:
+    image: thiagomag/google-drive-api-service:rpi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - rpi-network
+
+networks:
+  rpi-network:
+    external: true

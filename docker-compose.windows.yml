@@ -1,0 +1,12 @@
+services:
+  google-drive-api-service:
+    image: thiagomag/google-drive-api-service:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - windows-network
+
+networks:
+  windows-network:
+    external: true
